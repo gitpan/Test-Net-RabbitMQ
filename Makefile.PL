@@ -1,14 +1,56 @@
-use inc::Module::Install;
 
-name     'Test-Net-RabbitMQ';
-all_from 'lib/Test/Net/RabbitMQ.pm';
-author   q{Cory G Watson <gphat@cpan.org>};
-license  'perl';
+use strict;
+use warnings;
 
-build_requires 'Test::Exception';
-build_requires 'Test::More';
 
-requires 'Moose';
 
-WriteAll;
+use ExtUtils::MakeMaker 6.30;
+
+
+
+my %WriteMakefileArgs = (
+  "ABSTRACT" => "A mock RabbitMQ implementation for use when testing.",
+  "AUTHOR" => "Cory G Watson <gphat\@cpan.org>",
+  "BUILD_REQUIRES" => {
+    "Test::Exception" => 0,
+    "Test::More" => 0
+  },
+  "CONFIGURE_REQUIRES" => {
+    "ExtUtils::MakeMaker" => "6.30"
+  },
+  "DISTNAME" => "Test-Net-RabbitMQ",
+  "EXE_FILES" => [],
+  "LICENSE" => "perl",
+  "NAME" => "Test::Net::RabbitMQ",
+  "PREREQ_PM" => {
+    "Moose" => 0,
+    "strict" => 0,
+    "warnings" => 0
+  },
+  "VERSION" => "0.09",
+  "test" => {
+    "TESTS" => "t/*.t"
+  }
+);
+
+
+unless ( eval { ExtUtils::MakeMaker->VERSION(6.56) } ) {
+  my $br = delete $WriteMakefileArgs{BUILD_REQUIRES};
+  my $pp = $WriteMakefileArgs{PREREQ_PM};
+  for my $mod ( keys %$br ) {
+    if ( exists $pp->{$mod} ) {
+      $pp->{$mod} = $br->{$mod} if $br->{$mod} > $pp->{$mod};
+    }
+    else {
+      $pp->{$mod} = $br->{$mod};
+    }
+  }
+}
+
+delete $WriteMakefileArgs{CONFIGURE_REQUIRES}
+  unless eval { ExtUtils::MakeMaker->VERSION(6.52) };
+
+WriteMakefile(%WriteMakefileArgs);
+
+
 

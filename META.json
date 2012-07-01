@@ -1,0 +1,50 @@
+{
+   "abstract" : "A mock RabbitMQ implementation for use when testing.",
+   "author" : [
+      "Cory G Watson <gphat@cpan.org>"
+   ],
+   "dynamic_config" : 0,
+   "generated_by" : "Dist::Zilla version 4.300010, CPAN::Meta::Converter version 2.120630",
+   "license" : [
+      "perl_5"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : "2"
+   },
+   "name" : "Test-Net-RabbitMQ",
+   "prereqs" : {
+      "configure" : {
+         "requires" : {
+            "ExtUtils::MakeMaker" : "6.30"
+         }
+      },
+      "runtime" : {
+         "requires" : {
+            "Moose" : "0",
+            "strict" : "0",
+            "warnings" : "0"
+         }
+      },
+      "test" : {
+         "requires" : {
+            "Test::Exception" : "0",
+            "Test::More" : "0"
+         }
+      }
+   },
+   "release_status" : "stable",
+   "resources" : {
+      "bugtracker" : {
+         "web" : "https://github.com/gphat/test-net-rabbitmq/issues"
+      },
+      "homepage" : "https://github.com/gphat/test-net-rabbitmq",
+      "repository" : {
+         "type" : "git",
+         "url" : "https://github.com/gphat/test-net-rabbitmq.git",
+         "web" : "https://github.com/gphat/test-net-rabbitmq"
+      }
+   },
+   "version" : "0.09"
+}
+

@@ -1,9 +1,13 @@
 package Test::Net::RabbitMQ;
+{
+  $Test::Net::RabbitMQ::VERSION = '0.09';
+}
 use Moose;
 use warnings;
 use strict;
 
-our $VERSION = '0.08';
+# ABSTRACT: A mock RabbitMQ implementation for use when testing.
+
 
 # Bindings are stored in the following form:
 # {
@@ -18,6 +22,7 @@ has bindings => (
     isa => 'HashRef',
     default => sub { {} },
 );
+
 
 has connectable => (
     is => 'rw',
@@ -43,6 +48,7 @@ has channels => (
         _set_channel    => 'set',
     }
 );
+
 
 has debug => (
     is => 'rw',
@@ -93,6 +99,13 @@ has delivery_tag => (
     },
 );
 
+has _tx_messages => (
+    is      => 'ro',
+    isa     => 'HashRef',
+    default => sub{ {} },
+);
+
+
 sub channel_close {
     my ($self, $channel) = @_;
 
@@ -103,6 +116,7 @@ sub channel_close {
     $self->_remove_channel($channel);
 }
 
+
 sub channel_open {
     my ($self, $channel) = @_;
 
@@ -110,6 +124,7 @@ sub channel_open {
 
     $self->_set_channel($channel, 1);
 }
+
 
 sub connect {
     my ($self) = @_;
@@ -119,8 +134,9 @@ sub connect {
     $self->connected(1);
 }
 
+
 sub consume {
-    my ($self, $channel, $queue) = @_;
+    my ($self, $channel, $queue, $options) = @_;
 
     die "Not connected" unless $self->connected;
 
@@ -128,8 +144,17 @@ sub consume {
 
     die "Unknown queue" unless $self->_queue_exists($queue);
 
+    $options = $self->_apply_defaults( $options, {
+        no_local  => 0,
+        no_ack    => 1,
+        exclusive => 0,
+    });
+
+    die "no_ack=>0 is not supported at this time" if !$options->{no_ack};
+
     $self->queue($queue);
 }
+
 
 sub disconnect {
     my ($self) = @_;
@@ -138,6 +163,7 @@ sub disconnect {
 
     $self->connected(0);
 }
+
 
 sub exchange_declare {
     my ($self, $channel, $exchange, $options) = @_;
@@ -148,6 +174,53 @@ sub exchange_declare {
 
     $self->_set_exchange($exchange, 1);
 }
+
+
+sub tx_select {
+    my ($self, $channel) = @_;
+
+    die "Not connected" unless $self->connected;
+
+    die "Unknown channel: $channel" unless $self->_channel_exists($channel);
+
+    my $messages = $self->_tx_messages->{ $channel };
+    die "Transaction already started" if $messages;
+
+    $self->_tx_messages->{ $channel } = [];
+}
+
+
+sub tx_commit {
+    my ($self, $channel) = @_;
+
+    die "Not connected" unless $self->connected;
+
+    die "Unknown channel: $channel" unless $self->_channel_exists($channel);
+
+    my $messages = $self->_tx_messages->{ $channel };
+    die "Transaction not yet started" unless $messages;
+
+    foreach my $message (@$messages) {
+        $self->_publish( $channel, @$message );
+    }
+
+    delete $self->_tx_messages->{ $channel };
+}
+
+
+sub tx_rollback {
+    my ($self, $channel) = @_;
+
+    die "Not connected" unless $self->connected;
+
+    die "Unknown channel: $channel" unless $self->_channel_exists($channel);
+
+    my $messages = $self->_tx_messages->{ $channel };
+    die "Transaction not yet started" unless $messages;
+
+    delete $self->_tx_messages->{ $channel };
+}
+
 
 sub get {
     my ($self, $channel, $queue, $options) = @_;
@@ -169,6 +242,7 @@ sub get {
 
     return $message;
 }
+
 
 sub queue_bind {
     my ($self, $channel, $queue, $exchange, $pattern) = @_;
@@ -204,6 +278,7 @@ sub queue_bind {
     $self->bindings->{$exchange} = $binds;
 }
 
+
 sub queue_declare {
     my ($self, $channel, $queue, $options) = @_;
 
@@ -213,6 +288,7 @@ sub queue_declare {
 
     $self->_set_queue($queue, []);
 }
+
 
 sub queue_unbind {
     my ($self, $channel, $queue, $exchange, $routing_key) = @_;
@@ -230,7 +306,21 @@ sub queue_unbind {
     $self->_remove_binding($routing_key);
 }
 
+
 sub publish {
+    my $self = shift;
+    my $channel = shift;
+
+    my $messages = $self->_tx_messages->{ $channel };
+    if ($messages) {
+        push @$messages, [ @_ ];
+        return;
+    }
+
+    $self->_publish( $channel, @_ );
+}
+
+sub _publish {
     my ($self, $channel, $routing_key, $body, $options, $props) = @_;
 
     die "Not connected" unless $self->connected;
@@ -261,6 +351,7 @@ sub publish {
     }
 }
 
+
 sub recv {
     my ($self) = @_;
 
@@ -279,11 +370,36 @@ sub recv {
     return $message;
 }
 
+sub _apply_defaults {
+    my ($self, $args, $defaults) = @_;
+
+    $args ||= {};
+    my $new_args = {};
+
+    foreach my $key (keys %$args) {
+        $new_args->{$key} = $args->{$key};
+    }
+
+    foreach my $key (keys %$defaults) {
+        next if exists $new_args->{$key};
+        $new_args->{$key} = $defaults->{$key};
+    }
+
+    return $new_args;
+}
+
 1;
+
+__END__
+=pod
 
 =head1 NAME
 
 Test::Net::RabbitMQ - A mock RabbitMQ implementation for use when testing.
+
+=head1 VERSION
+
+version 0.09
 
 =head1 SYNOPSIS
 
@@ -335,7 +451,7 @@ need! At the moment there are a number of shortcomings:
 =item lots of other stuff!
 
 =back
- 
+
 =head1 ATTRIBUTES
 
 =head2 connectable
@@ -349,13 +465,13 @@ to STDERR any time a message is added to a queue.
 
 =head1 METHODS
 
-=head2 channel_open($number)
-
-Opens a channel with the specific number.
-
 =head2 channel_close($number)
 
 Closes the specific channel.
+
+=head2 channel_open($number)
+
+Opens a channel with the specific number.
 
 =head2 connect
 
@@ -373,6 +489,21 @@ Disconnects this instance by setting C<connected> to false.
 =head2 exchange_declare($channel, $exchange, $options)
 
 Creates an exchange of the specified name.
+
+=head2 tx_select($channel)
+
+Begins a transaction on the specified channel.  From this point forward all
+publish() calls on the channel will be buffered until a call to L</tx_commit>
+or L</tx_rollback> is made.
+
+=head2 tx_commit($channel)
+
+Commits a transaction on the specified channel, causing all buffered publish()
+calls to this point to be published.
+
+=head2 tx_rollback($channel)
+
+Rolls the transaction back, causing all buffered publish() calls to be wiped.
 
 =head2 get ($channel, $queue, $options)
 
@@ -428,18 +559,14 @@ information:
 
 =head1 AUTHOR
 
-Cory G Watson, C<< <gphat at cpan.org> >>
+Cory G Watson <gphat@cpan.org>
 
-=head1 COPYRIGHT & LICENSE
+=head1 COPYRIGHT AND LICENSE
 
-Copyright 2010 Cory G Watson.
+This software is copyright (c) 2012 by Cory G Watson.
 
-This program is free software; you can redistribute it and/or modify it
-under the terms of either: the GNU General Public License as published
-by the Free Software Foundation; or the Artistic License.
-
-See http://dev.perl.org/licenses/ for more information.
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
 
 =cut
 
-1; # End of Test::Net::RabbitMQ

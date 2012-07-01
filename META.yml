@@ -1,28 +1,25 @@
 ---
 abstract: 'A mock RabbitMQ implementation for use when testing.'
 author:
-  - 'Cory G Watson, C<< <gphat at cpan.org> >>'
   - 'Cory G Watson <gphat@cpan.org>'
 build_requires:
-  ExtUtils::MakeMaker: 6.36
   Test::Exception: 0
   Test::More: 0
 configure_requires:
-  ExtUtils::MakeMaker: 6.36
-distribution_type: module
-dynamic_config: 1
-generated_by: 'Module::Install version 1.04'
+  ExtUtils::MakeMaker: 6.30
+dynamic_config: 0
+generated_by: 'Dist::Zilla version 4.300010, CPAN::Meta::Converter version 2.120630'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
   version: 1.4
 name: Test-Net-RabbitMQ
-no_index:
-  directory:
-    - inc
-    - t
 requires:
   Moose: 0
+  strict: 0
+  warnings: 0
 resources:
-  license: http://dev.perl.org/licenses/
-version: 0.08
+  bugtracker: https://github.com/gphat/test-net-rabbitmq/issues
+  homepage: https://github.com/gphat/test-net-rabbitmq
+  repository: https://github.com/gphat/test-net-rabbitmq.git
+version: 0.09
