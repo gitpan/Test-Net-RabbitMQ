@@ -1,7 +1,5 @@
 package Test::Net::RabbitMQ;
-{
-  $Test::Net::RabbitMQ::VERSION = '0.09';
-}
+$Test::Net::RabbitMQ::VERSION = '0.10';
 use Moose;
 use warnings;
 use strict;
@@ -344,7 +342,7 @@ sub _publish {
                 body         => $body,
                 routing_key  => $routing_key,
                 exchange     => $exchange,
-                props        => $props,
+                props        => $props || {},
             };
             push(@{ $self->_get_queue($binds->{$pattern}) }, $message);
         }
@@ -391,6 +389,7 @@ sub _apply_defaults {
 1;
 
 __END__
+
 =pod
 
 =head1 NAME
@@ -399,7 +398,7 @@ Test::Net::RabbitMQ - A mock RabbitMQ implementation for use when testing.
 
 =head1 VERSION
 
-version 0.09
+version 0.10
 
 =head1 SYNOPSIS
 
@@ -563,10 +562,9 @@ Cory G Watson <gphat@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2012 by Cory G Watson.
+This software is copyright (c) 2014 by Cory G Watson.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
 
 =cut
-
