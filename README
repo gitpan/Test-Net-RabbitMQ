@@ -1,7 +1,7 @@
 
 
 This archive contains the distribution Test-Net-RabbitMQ,
-version 0.10:
+version 0.11:
 
   A mock RabbitMQ implementation for use when testing.
 

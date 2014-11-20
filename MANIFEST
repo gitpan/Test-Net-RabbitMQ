@@ -14,6 +14,7 @@ t/channels.t
 t/connections.t
 t/fifo.t
 t/pubsub.t
+t/queue.t
 t/release-pod-syntax.t
 t/release-synopsis.t
 t/simple.t

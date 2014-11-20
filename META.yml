@@ -22,4 +22,4 @@ resources:
   bugtracker: https://github.com/gphat/test-net-rabbitmq/issues
   homepage: https://github.com/gphat/test-net-rabbitmq
   repository: https://github.com/gphat/test-net-rabbitmq.git
-version: 0.10
+version: 0.11

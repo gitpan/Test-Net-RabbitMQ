@@ -1,5 +1,5 @@
 package Test::Net::RabbitMQ;
-$Test::Net::RabbitMQ::VERSION = '0.10';
+$Test::Net::RabbitMQ::VERSION = '0.11';
 use Moose;
 use warnings;
 use strict;
@@ -284,7 +284,7 @@ sub queue_declare {
 
     die "Unknown channel: $channel" unless $self->_channel_exists($channel);
 
-    $self->_set_queue($queue, []);
+    $self->_set_queue($queue, []) unless $self->_queue_exists($queue);
 }
 
 
@@ -398,7 +398,7 @@ Test::Net::RabbitMQ - A mock RabbitMQ implementation for use when testing.
 
 =head1 VERSION
 
-version 0.10
+version 0.11
 
 =head1 SYNOPSIS
 
